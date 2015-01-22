@@ -222,6 +222,9 @@ static unsigned int
 	sdCurrentSlot,
 	sdCurrentBlockOffset;
 
+static volatile unsigned int
+	sdLastSlotPlayed;
+
 enum					// All the things the micro sd card state machine can be doing
 	{
 		SD_NOT_PRESENT=0,
@@ -3810,6 +3813,7 @@ static unsigned int
 // SD stuff
 
 #define		MIDI_CHANGE_SD_SAMPLE_BANK			52		// SD samples are played with NOTE_ON messages, which can only hit 128 positions in memory.  "Banks" here are 0-3 which set which group of 128 samples you will play (the SD card has up to 512).
+#define		MIDI_WRITE_LAST_SAMPLE			53
 
 static const unsigned int OctaveZeroCompareMatches[]=
 // This table corresponds to a musical octave (the lowest octave we can generate with a 16-bit compare match timer) in 12 tone equal temperament.
@@ -5054,6 +5058,7 @@ static void DoSampler(void)
 			{
 				if(currentMidiMessage.channelNumber==BANK_SD)				// Is this a command to stream SD?
 				{
+					sdLastSlotPlayed=currentMidiMessage.dataByteOne+midiSdSampleOffset;
 					PlaySampleFromSd(currentMidiMessage.dataByteOne+midiSdSampleOffset);	// Play it.  No velocity, and let it ring out.
 				}
 				else	// Real sample, not sd card.
@@ -5279,6 +5284,13 @@ static void DoSampler(void)
 					}
 					break;
 
+					case MIDI_WRITE_LAST_SAMPLE:
+					if(currentMidiMessage.channelNumber!=BANK_SD&&CheckSdSlotFull(sdLastSlotPlayed))
+					{
+						ReadSampleFromSd(currentMidiMessage.channelNumber,sdLastSlotPlayed);
+					}
+					break;
+
 					default:
 					break;
 				}
@@ -5351,6 +5363,7 @@ static void InitSampler(void)
 
 	currentBank=BANK_0;			// Point at the first bank until we change banks.
 	sdCurrentSlot=0;			// Point at the first sample slot on the SD card.
+	sdLastSlotPlayed=0;   // Point at the first sample slot on the SD card.
 
 	KillLeds();					// All leds off, and no blinking.
 	SetState(DoSampler);		// Get to sampling
