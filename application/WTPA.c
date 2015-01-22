@@ -3790,6 +3790,12 @@ static unsigned int
 #define 	MIDI_JITTER					21		// Hisssss
 #define 	MIDI_OUTPUT_COMBINATION		22		// Set the output (SUM, XOR, AND, MULT) with this message.
 #define 	MIDI_STORE_RECORD_NOTE		23		// Makes the next NOTE_ON into the record rate we'll use from here on out (and stores to eeprom)
+#define		MIDI_RECORDING_TOGGLE				102
+#define		MIDI_OVERDUB_TOGGLE				103
+#define		MIDI_REALTIME_TOGGLE				104
+#define		MIDI_LOOP_TOGGLE				105
+#define		MIDI_HALF_SPEED_TOGGLE				106
+#define		MIDI_PLAY_BACKWARDS_TOGGLE			107
 
 // Editing functions:
 
@@ -5073,7 +5079,9 @@ static void DoSampler(void)
 				switch(currentMidiMessage.dataByteOne)
 				{
 					case MIDI_RECORDING:						// Can re-start recording arbitrarily.
-					if(currentMidiMessage.dataByteTwo)
+					case MIDI_RECORDING_TOGGLE:
+					if((currentMidiMessage.dataByteOne==MIDI_RECORDING&&currentMidiMessage.dataByteTwo)||
+					(currentMidiMessage.dataByteOne==MIDI_RECORDING_TOGGLE&&bankStates[currentMidiMessage.channelNumber].audioFunction!=AUDIO_RECORD))
 					{
 						StartRecording(currentMidiMessage.channelNumber,CLK_INTERNAL,theMidiRecordRate[currentMidiMessage.channelNumber]);					// We set the record rate with this call.  Historically it's been note 60 (midi c4)
 						bankStates[currentMidiMessage.channelNumber].realtimeOn=false;																		// We'll default to playback after a recording.
@@ -5086,7 +5094,9 @@ static void DoSampler(void)
 					break;
 
 					case MIDI_OVERDUB:							// Can re-start overdubbing arbitrarily.
-					if(currentMidiMessage.dataByteTwo)
+					case MIDI_OVERDUB_TOGGLE:
+					if((currentMidiMessage.dataByteOne==MIDI_OVERDUB&&currentMidiMessage.dataByteTwo)||
+					(currentMidiMessage.dataByteOne==MIDI_OVERDUB_TOGGLE&&bankStates[currentMidiMessage.channelNumber].audioFunction!=AUDIO_OVERDUB))
 					{
 						if(bankStates[currentMidiMessage.channelNumber].startAddress!=bankStates[currentMidiMessage.channelNumber].endAddress)		// Because of how OVERDUB thinks about memory we can't do it unless you there's already a sample in the bank.
 						{
@@ -5101,7 +5111,9 @@ static void DoSampler(void)
 					break;
 
 					case MIDI_REALTIME:							// Can re-start realtime arbitrarily.
-					if(currentMidiMessage.dataByteTwo)
+					case MIDI_REALTIME_TOGGLE:
+					if((currentMidiMessage.dataByteOne==MIDI_REALTIME&&currentMidiMessage.dataByteTwo)||
+					(currentMidiMessage.dataByteOne==MIDI_REALTIME_TOGGLE&&bankStates[currentMidiMessage.channelNumber].audioFunction!=AUDIO_REALTIME))
 					{
 						StartRealtime(currentMidiMessage.channelNumber,CLK_INTERNAL,theMidiRecordRate[currentMidiMessage.channelNumber]);		// Set initial realtime rate.
 						bankStates[currentMidiMessage.channelNumber].realtimeOn=true;															// Set flag so that we don't stop realtime processing if we get a note off.
@@ -5116,7 +5128,9 @@ static void DoSampler(void)
 					break;
 
 					case MIDI_LOOP:							// Keep playing samples over again until note off.
-					if(currentMidiMessage.dataByteTwo)
+					case MIDI_LOOP_TOGGLE:
+					if((currentMidiMessage.dataByteOne==MIDI_LOOP&&currentMidiMessage.dataByteTwo)||
+					(currentMidiMessage.dataByteOne==MIDI_LOOP_TOGGLE&&bankStates[currentMidiMessage.channelNumber].loopOnce==true))
 					{
 						bankStates[currentMidiMessage.channelNumber].loopOnce=false;
 					}
@@ -5127,7 +5141,9 @@ static void DoSampler(void)
 					break;
 
 					case MIDI_HALF_SPEED:							// Skrew and chop.
-					if(currentMidiMessage.dataByteTwo)
+					case MIDI_HALF_SPEED_TOGGLE:
+					if((currentMidiMessage.dataByteOne==MIDI_HALF_SPEED&&currentMidiMessage.dataByteTwo)||
+					(currentMidiMessage.dataByteOne==MIDI_HALF_SPEED_TOGGLE&&bankStates[currentMidiMessage.channelNumber].samplesToSkip==0))
 					{
 						bankStates[currentMidiMessage.channelNumber].samplesToSkip=1;
 					}
@@ -5138,7 +5154,9 @@ static void DoSampler(void)
 					break;
 
 					case MIDI_PLAY_BACKWARDS:						// "Paul is Dead"
-					if(currentMidiMessage.dataByteTwo)
+					case MIDI_PLAY_BACKWARDS_TOGGLE:
+					if((currentMidiMessage.dataByteOne==MIDI_PLAY_BACKWARDS&&currentMidiMessage.dataByteTwo)||
+					(currentMidiMessage.dataByteOne==MIDI_PLAY_BACKWARDS_TOGGLE&&bankStates[currentMidiMessage.channelNumber].backwardsPlayback==false))
 					{
 						bankStates[currentMidiMessage.channelNumber].backwardsPlayback=true;
 					}
