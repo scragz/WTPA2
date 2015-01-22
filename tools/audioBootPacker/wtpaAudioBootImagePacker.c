@@ -284,7 +284,7 @@ int main(int argc, char *argv[])
 		printf("This means all you edgy types out there can totally try and program your WTPA with an mp3 of fart noises just to see what happens.\n");
 		printf("Usage: wtpaAudioBootImagePacker [filename]\n");
 		printf("TMB, October 2014\n\n");
-		return;
+		return(0);
 	}
 
 	//Open file
@@ -292,7 +292,7 @@ int main(int argc, char *argv[])
 	if (!sourceFile)
 	{
 		fprintf(stderr, "Unable to open file: %s\n",argv[1]);
-		return;
+		return(1);
 	}
 
 	printf("\nPacking %s into a WTPA2 audio bootloader file...\n",argv[1]);
@@ -308,7 +308,7 @@ int main(int argc, char *argv[])
 	{
 		fprintf(stderr, "Error allocating memory!\n");
 		fclose(sourceFile);
-		return;
+		return(1);
 	}
 
 	//Read file contents into buffer
@@ -406,7 +406,7 @@ int main(int argc, char *argv[])
 	if (!destFile)
 	{
 		fprintf(stderr, "Can't create boot file!\n");
-		return;
+		return(1);
 	}
 
 	// Need to calculate number of bytes in AIFF file.  This will be:
