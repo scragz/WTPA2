@@ -3800,6 +3800,7 @@ static unsigned int
 #define		MIDI_HALF_SPEED_TOGGLE				106
 #define		MIDI_PLAY_BACKWARDS_TOGGLE			107
 #define		MIDI_RESTART_LOOP			108
+#define		MIDI_STOP_LOOP			109
 
 // Editing functions:
 
@@ -5235,6 +5236,14 @@ static void DoSampler(void)
             StartPlayback(currentMidiMessage.channelNumber,CLK_EXTERNAL,0);					// Begin playing back the loop (ext clock)
             bankStates[currentMidiMessage.channelNumber].loopOnce=false;
           }
+					break;
+
+					case MIDI_STOP_LOOP:
+					if(currentMidiMessage.channelNumber!=BANK_SD)
+					{
+					  bankStates[currentMidiMessage.channelNumber].audioFunction=AUDIO_IDLE;		// Nothing to do in the ISR
+					  bankStates[currentMidiMessage.channelNumber].clockMode=CLK_NONE;				// Don't trigger this bank.
+					}
 					break;
 
 					case MIDI_STORE_RECORD_NOTE:				// Turn the last note on into the note we always record at.
